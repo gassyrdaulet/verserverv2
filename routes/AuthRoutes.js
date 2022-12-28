@@ -11,7 +11,7 @@ import {
   registration,
   sendCodeToRestoreTheAccount,
 } from "../controllers/AuthController.js";
-import { auth } from "../middleware/routerSecurity.js";
+import { auth } from "../middleware/RouterSecurity.js";
 
 const router = new Router();
 
