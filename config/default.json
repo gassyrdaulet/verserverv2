@@ -1,0 +1,18 @@
+{
+  "dbConfig": {
+    "dbConfig": {
+      "host": "jackmarket.kz",
+      "port": "3306",
+      "user": "kaspiver0",
+      "password": "password",
+      "database": "verificator"
+    },
+    "dbConfigProd": {
+      "host": "127.0.0.1",
+      "port": "3306",
+      "user": "kaspiver0",
+      "password": "password",
+      "database": "verificator"
+    }
+  }
+}
