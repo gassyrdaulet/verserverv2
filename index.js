@@ -10,7 +10,7 @@ import bodyParser from "body-parser";
 import AuthRoutes from "./routes/AuthRoutes.js";
 import StoreRoutes from "./routes/StoreRoutes.js";
 import cors from "cors";
-import { auth } from "./middleware/routerSecurity.js";
+import { auth } from "./middleware/RouterSecurity.js";
 import mysql from "mysql2/promise";
 
 const PORT = process.env.PORT ? process.env.PORT : 9898;
