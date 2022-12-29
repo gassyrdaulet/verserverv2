@@ -145,7 +145,7 @@ export const registration = async (req, res) => {
       sendConfirmationEmail(name, email, confirmationcCode);
 
       await conn.query(sql2, {
-        email,
+        email: email.toLowerCase(),
         name,
         storelist: store_id,
         type: "inactive",
