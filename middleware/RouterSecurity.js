@@ -16,11 +16,12 @@ export const auth = (req, res, next) => {
     req.user = decodedData;
     next();
   } catch (e) {
-    console.log(e);
     if (e.name === "JsonWebTokenError") {
-      res.status(403).json({ message: "Отказано в доступе.", logout: "true" });
+      res
+        .status(403)
+        .json({ message: "Отказано в доступе.", logout: "true", error: -1 });
     } else {
-      res.status(500).json({ message: e.name });
+      res.status(500).json({ message: e.name, logout: "true", error: -1 });
     }
   }
 };

@@ -1,17 +1,14 @@
 import * as dotenv from "dotenv";
 dotenv.config();
-import config from "config";
-const { PRODUCTION } = process.env;
-const { dbConfig: dataBaseConfig, dbConfigProd: dataBaseConfigProduction } =
-  config.get("dbConfig");
-const production = PRODUCTION === "0" ? false : true;
 import express from "express";
 import bodyParser from "body-parser";
 import AuthRoutes from "./routes/AuthRoutes.js";
 import StoreRoutes from "./routes/StoreRoutes.js";
 import cors from "cors";
 import { auth } from "./middleware/RouterSecurity.js";
-import mysql from "mysql2/promise";
+import IAPRoutes from "./routes/IAPRoutes.js";
+import conn from "./db.js";
+import { google } from "googleapis";
 
 const PORT = process.env.PORT ? process.env.PORT : 9898;
 const app = express();
@@ -24,9 +21,14 @@ app.use(
 app.use(bodyParser.json());
 app.use("/api/auth/", AuthRoutes);
 app.use("/api/stores/", auth, StoreRoutes);
+app.use("/api/iap/", IAPRoutes);
 
 const checkForPremium = async () => {
   try {
+    const auth = new google.auth.GoogleAuth({
+      keyFile: "pc-api-7328700191590391894-370-3ab9d12ae106.json",
+      scopes: ["https://www.googleapis.com/auth/androidpublisher"],
+    });
     console.log(
       "\n" + new Date().toLocaleDateString(),
       new Date().toLocaleTimeString(),
@@ -35,27 +37,52 @@ const checkForPremium = async () => {
     const sql = `SELECT * FROM users`;
     const sql2 = `SELECT premium FROM stores WHERE ?`;
     const sql3 = `UPDATE stores SET premium = "0" WHERE ?`;
-    const conn = await mysql.createConnection(
-      production ? dataBaseConfigProduction : dataBaseConfig
-    );
+
     const users = (await conn.query(sql))[0];
     await Promise.all(
       users.map(async (user) => {
         try {
           if (
-            Date.now() - parseInt(user.adate) >=
-            process.env.ACTIVATION_LT_IN_DAYS * 24 * 60 * 60 * 1000
+            (user.store === "",
+            !user.store,
+            user.purchasetoken === "" || !user.purchasetoken)
           ) {
-            const testing_prem = (
-              await conn.query(sql2, { uid: user.store })
-            )[0];
-            const { premium: isPremium } = (
+            const { premium } = (
               await conn.query(sql2, { uid: user.store })
             )[0][0];
-
-            if (isPremium === "1") {
-              console.log("Deactivating premium on user: " + user.uid);
+            if (premium === "1") {
+              console.log(
+                `Deactivating premium on user: ${user.uid}, Store UID: ${user.store}`
+              );
               await conn.query(sql3, { uid: user.store });
+            }
+            return;
+          }
+          if (Date.now() > parseInt(user.adate)) {
+            try {
+              const response = await google
+                .androidpublisher("v3")
+                .purchases.subscriptionsv2.get({
+                  packageName: "com.gassyrdaulet.codechecker",
+                  token: user["purchasetoken"],
+                  auth,
+                });
+              if (
+                response.data.subscriptionState === "SUBSCRIPTION_STATE_EXPIRED"
+              ) {
+                console.log("Premium on id:" + user.id + " has expired!");
+                const { premium } = (
+                  await conn.query(sql2, { uid: user.store })
+                )[0][0];
+                if (premium === "1") {
+                  console.log(
+                    `Deactivating premium on user: ${user.uid}, Store UID: ${user.store}`
+                  );
+                  await conn.query(sql3, { uid: user.store });
+                }
+              }
+            } catch (e) {
+              console.log(user.id + ": " + e.message);
             }
           }
         } catch (e) {
@@ -63,16 +90,15 @@ const checkForPremium = async () => {
         }
       })
     );
-    conn.end();
     console.log(
       new Date().toLocaleDateString(),
       new Date().toLocaleTimeString(),
       "checking premium ended.",
-      `Next check after ${process.env.CHECKING_HOURS} hours.\n`
+      `Next check after 300 seconds.\n`
     );
     setTimeout(() => {
       checkForPremium();
-    }, process.env.CHECKING_HOURS * 60 * 60 * 1000);
+    }, 300 * 1000);
   } catch (e) {
     console.log(e);
   }

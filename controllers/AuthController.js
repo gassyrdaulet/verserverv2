@@ -18,10 +18,12 @@ import mysql from "mysql2/promise";
 import { customAlphabet } from "nanoid";
 import { sendConfirmationEmail } from "../service/AuthService.js";
 
-const generateAccesToken = (id, role) => {
+const generateAccesToken = (id, role, uid, store) => {
   const payload = {
     id,
     role,
+    uid,
+    store,
   };
   return jwt.sign(payload, process.env.SECRET_KEY, {
     expiresIn: process.env.LOGIN_TOKEN_LT,
@@ -51,12 +53,12 @@ export const login = async (req, res) => {
     if (!isPassValid) {
       return res.status(400).json({ message: "Неверный пароль." });
     }
-    if (user.type === "inactive") {
-      return res
-        .status(200)
-        .json({ message: "Пожалуйста, подтвердите ваш E-mail!", email });
-    }
-    const token = generateAccesToken(user.id);
+    // if (user.type === "inactive") {
+    //   return res
+    //     .status(200)
+    //     .json({ message: "Пожалуйста, подтвердите ваш E-mail!", email });
+    // }
+    const token = generateAccesToken(user.id, user.role, user.uid, user.store);
     return res.json({
       token,
       user: {
@@ -80,13 +82,12 @@ export const registration = async (req, res) => {
     );
     const errors = validationResult(req);
     const { email, name, password, cellphone } = req.body;
-    const sql = `SELECT * FROM users WHERE email = '${email}'`;
     const sql2 = `INSERT INTO users SET ?`;
     const sql3 = `INSERT INTO stores SET ?`;
+    const sql = `SELECT * FROM users WHERE email = '${email}'`;
     const candidate = (await conn.query(sql))[0][0];
     if (!errors.isEmpty()) {
       await conn.end();
-
       return res.status(400).json({ message: "Ошибка!", errors });
     }
     if (candidate) {
@@ -133,7 +134,7 @@ export const registration = async (req, res) => {
         manager: name,
         owner: uid,
         users: uid,
-        premium: "1",
+        premium: "0",
         avatar,
       });
 
@@ -162,8 +163,7 @@ export const registration = async (req, res) => {
 
       return res
         .json({
-          message:
-            "Пользователь успешно зарегистрирован. Код для подтверждения отправлен вам на E-Mail!",
+          message: "Пользователь успешно зарегистрирован!",
         })
         .status(200);
     }
