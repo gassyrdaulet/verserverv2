@@ -387,3 +387,31 @@ export const getOtherInfo = async (req, res) => {
     res.status(500).json({ message: "Ошибка! " + e });
   }
 };
+
+export const giveSubscription = async (req, res) => {
+  try {
+    const { id } = req.user;
+    if (id !== parseInt(process.env.ADMIN_ID)) {
+      return res.status(403).json({ message: "Отказано в доступе!" });
+    }
+    const { userUID, days } = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: "Ошибка!", errors });
+    }
+    const date = Date.now() + days * 24 * 60 * 60 * 1000;
+    await conn.query(
+      `UPDATE users SET purchasetoken = "demo",premiumtype = "trialversion", adate = "${date}", stringadate = "${
+        new Date(date).toLocaleDateString
+      }${new Date(date).toLocaleTimeString}" WHERE uid = ${userUID}`
+    );
+    const sql1 = `SELECT * FROM users WHERE UID = ${userUID}`;
+    const user = (await conn.query(sql1))[0][0];
+    const sql2 = `UPDATE stores SET premium = "1" WHERE ?`;
+    await conn.query(sql2, { uid: user.store });
+    res.status(200).json({ message: "Подписка была успешно предоставлена!" });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: "Ошибка в сервере! " + e });
+  }
+};

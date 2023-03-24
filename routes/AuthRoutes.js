@@ -10,6 +10,7 @@ import {
   login,
   registration,
   sendCodeToRestoreTheAccount,
+  giveSubscription,
 } from "../controllers/AuthController.js";
 import { auth } from "../middleware/RouterSecurity.js";
 
@@ -127,4 +128,6 @@ router.post(
   ],
   changePassword
 );
+router.post("/subscription", auth, giveSubscription);
+
 export default router;

@@ -3,7 +3,7 @@ import conn from "../db.js";
 
 export const validate = async (req, res) => {
   try {
-    const { store } = req.user;
+    const { store, id } = req.user;
     const auth = new google.auth.GoogleAuth({
       keyFile: "pc-api-7328700191590391894-370-3ab9d12ae106.json",
       scopes: ["https://www.googleapis.com/auth/androidpublisher"],
@@ -21,13 +21,13 @@ export const validate = async (req, res) => {
     }
     if (response.data.subscriptionState === "SUBSCRIPTION_STATE_ACTIVE") {
       await conn.query(
-        `UPDATE users SET purchasetoken = "${
+        `UPDATE users SET premiumtype="googlepay",purchasetoken = "${
           req.body["purchaseToken"]
         }", adate = "${Date.parse(
           response.data?.lineItems[0].expiryTime
         )}", stringadate = "${
           response.data?.lineItems[0].expiryTime
-        }" WHERE id = 6`
+        }" WHERE id = ${id}`
       );
       const sql = `UPDATE stores SET premium = "1" WHERE ?`;
       await conn.query(sql, { uid: store });

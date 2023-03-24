@@ -60,6 +60,19 @@ const checkForPremium = async () => {
           }
           if (Date.now() > parseInt(user.adate)) {
             try {
+              console.log("Premium on id:" + user.id + " has expired!");
+              if (user.premiumtype === "trialversion") {
+                const { premium } = (
+                  await conn.query(sql2, { uid: user.store })
+                )[0][0];
+                if (premium === "1") {
+                  console.log(
+                    `Deactivating premium on user: ${user.uid}, Store UID: ${user.store}`
+                  );
+                  await conn.query(sql3, { uid: user.store });
+                }
+                return;
+              }
               const response = await google
                 .androidpublisher("v3")
                 .purchases.subscriptionsv2.get({
@@ -70,7 +83,6 @@ const checkForPremium = async () => {
               if (
                 response.data.subscriptionState === "SUBSCRIPTION_STATE_EXPIRED"
               ) {
-                console.log("Premium on id:" + user.id + " has expired!");
                 const { premium } = (
                   await conn.query(sql2, { uid: user.store })
                 )[0][0];
