@@ -402,9 +402,11 @@ export const giveSubscription = async (req, res) => {
     }
     const date = Date.now() + days * 24 * 60 * 60 * 1000;
     await conn.query(
-      `UPDATE users SET purchasetoken = "demo",premiumtype = "trialversion", adate = "${date}", stringadate = "${
-        new Date(date).toLocaleDateString
-      }${new Date(date).toLocaleTimeString}" WHERE uid = ${userUID}`
+      `UPDATE users SET purchasetoken = "demo",premiumtype = "trialversion", adate = "${date}", stringadate = "${new Date(
+        date
+      ).toLocaleDateString()}${new Date(
+        date
+      ).toLocaleTimeString()}" WHERE uid = ${userUID}`
     );
     const sql1 = `SELECT * FROM users WHERE UID = ${userUID}`;
     const user = (await conn.query(sql1))[0][0];
