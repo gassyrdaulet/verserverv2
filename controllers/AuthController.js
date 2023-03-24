@@ -17,6 +17,7 @@ import { validationResult } from "express-validator";
 import mysql from "mysql2/promise";
 import { customAlphabet } from "nanoid";
 import { sendConfirmationEmail } from "../service/AuthService.js";
+import conn from "../db.js";
 
 const generateAccesToken = (id, role, uid, store) => {
   const payload = {
