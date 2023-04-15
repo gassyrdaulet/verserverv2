@@ -15,4 +15,4 @@ const dataBaseConfigProduction = {
   database: "verificator",
 };
 
-export default mysql.createPool(dataBaseConfigProduction);
+export default mysql.createPool(dataBaseConfig);

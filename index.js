@@ -115,7 +115,8 @@ const checkForPremium = async () => {
     console.log(e);
   }
 };
-checkForPremium();
+// checkForPremium();
+// Checking Premium disabled. Free app for everyone!
 
 app.listen(PORT, () => {
   console.log(
