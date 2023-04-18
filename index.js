@@ -120,6 +120,6 @@ const checkForPremium = async () => {
 
 app.listen(PORT, () => {
   console.log(
-    `Server is LIVE. Go to http://[your-ip]:/${PORT} so you can see the data.`
+    `Server is LIVE. Go to http://[your-ip]:${PORT} so you can see the data.`
   );
 });

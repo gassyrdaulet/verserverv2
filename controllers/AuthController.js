@@ -135,7 +135,7 @@ export const registration = async (req, res) => {
         manager: name,
         owner: uid,
         users: uid,
-        premium: "0",
+        premium: "1", //Premium is gived for everyone!
         avatar,
       });
 
